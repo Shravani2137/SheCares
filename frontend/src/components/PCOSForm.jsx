@@ -1,83 +1,128 @@
 import { useState } from "react";
+import { db } from "../firebase";
+import { collection, addDoc } from "firebase/firestore";
 
-function PCOSForm(){
+function PCOSForm() {
+  const [form, setForm] = useState({
+    age: "",
+    bmi: "",
+    irregular: "",
+    cycle: "",
+    weight: "",
+    hair: "",
+    pimples: "",
+    skin: "",
+    fastfood: "",
+    exercise: ""
+  });
 
-const [form,setForm] = useState({
-age:"",
-bmi:"",
-irregular:"",
-cycle:"",
-missed:"",
-weight:"",
-hair:"",
-pimples:"",
-skin:"",
-fastfood:"",
-exercise:""
-});
+  const [result, setResult] = useState("");
+  const [loading, setLoading] = useState(false);
 
-const [result,setResult] = useState("");
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
 
-const handleChange=(e)=>{
-setForm({...form,[e.target.name]:e.target.value});
-};
+  const predictPCOS = async () => {
 
-const predictPCOS = async()=>{
+    // ✅ Validation
+    for (let key in form) {
+      if (form[key] === "") {
+        alert("Please fill all fields");
+        return;
+      }
+    }
 
-const features=[
-Number(form.age),
-Number(form.bmi),
-Number(form.irregular),
-Number(form.cycle),
-Number(form.missed),
-Number(form.weight),
-Number(form.hair),
-Number(form.pimples),
-Number(form.skin),
-Number(form.fastfood),
-Number(form.exercise)
-];
+    const features = Object.values(form).map(Number);
 
-const response = await fetch("http://127.0.0.1:5000/predict",{
+    try {
+      setLoading(true);
 
-method:"POST",
-headers:{"Content-Type":"application/json"},
-body:JSON.stringify({features})
+      const response = await fetch("http://127.0.0.1:5000/predict", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ features })
+      });
 
-});
+      const data = await response.json();
 
-const data = await response.json();
+      // 🔥 SAVE TO FIREBASE
+      await addDoc(collection(db, "predictions"), {
+        ...form,
+        prediction: data.prediction,
+        createdAt: new Date()
+      });
 
-setResult(data.prediction===1 ? "⚠️ PCOS Risk Detected" : "✅ Low Risk");
+      console.log("✅ Saved to Firebase");
 
-};
+      setResult(
+        data.prediction === 1
+          ? "⚠️ PCOS Risk Detected"
+          : "✅ Low Risk"
+      );
 
-return(
+    } catch (error) {
+      console.error("Error:", error);
+      setResult("❌ Error occurred");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-<div style={{maxWidth:"400px",margin:"auto"}}>
+  return (
+    <div style={{
+      maxWidth: "450px",
+      margin: "auto",
+      padding: "20px",
+      borderRadius: "12px",
+      background: "#f5f7fa",
+      boxShadow: "0 4px 10px rgba(0,0,0,0.1)"
+    }}>
+      <h2 style={{ textAlign: "center" }}>PCOS Prediction</h2>
 
-<input placeholder="Age" name="age" onChange={handleChange}/>
-<input placeholder="BMI" name="bmi" onChange={handleChange}/>
-<input placeholder="Irregular periods (1/0)" name="irregular" onChange={handleChange}/>
-<input placeholder="Cycle length" name="cycle" onChange={handleChange}/>
-<input placeholder="Missed periods (1/0)" name="missed" onChange={handleChange}/>
-<input placeholder="Weight gain (1/0)" name="weight" onChange={handleChange}/>
-<input placeholder="Hair growth (1/0)" name="hair" onChange={handleChange}/>
-<input placeholder="Pimples (1/0)" name="pimples" onChange={handleChange}/>
-<input placeholder="Skin darkening (1/0)" name="skin" onChange={handleChange}/>
-<input placeholder="Fast food (1/0)" name="fastfood" onChange={handleChange}/>
-<input placeholder="Exercise (1/0)" name="exercise" onChange={handleChange}/>
+      <input name="age" placeholder="Age" onChange={handleChange} />
+      <input name="bmi" placeholder="BMI" onChange={handleChange} />
+      <input name="irregular" placeholder="Irregular (1/0)" onChange={handleChange} />
+      <input name="cycle" placeholder="Cycle Length" onChange={handleChange} />
+      <input name="weight" placeholder="Weight Gain (1/0)" onChange={handleChange} />
+      <input name="hair" placeholder="Hair Growth (1/0)" onChange={handleChange} />
+      <input name="pimples" placeholder="Pimples (1/0)" onChange={handleChange} />
+      <input name="skin" placeholder="Skin Darkening (1/0)" onChange={handleChange} />
+      <input name="fastfood" placeholder="Fast Food (1/0)" onChange={handleChange} />
+      <input name="exercise" placeholder="Exercise (1/0)" onChange={handleChange} />
 
-<br/><br/>
+      <button
+        onClick={predictPCOS}
+        style={{
+          width: "100%",
+          padding: "12px",
+          marginTop: "10px",
+          border: "none",
+          borderRadius: "8px",
+          background: "#ff4d8d",
+          color: "white",
+          fontWeight: "bold",
+          cursor: "pointer"
+        }}
+      >
+        {loading ? "Predicting..." : "Predict"}
+      </button>
 
-<button onClick={predictPCOS}>Predict</button>
+      <a href="/history" style={{
+  display: "block",
+  textAlign: "center",
+  marginTop: "15px",
+  color: "#ff4d8d",
+  fontWeight: "bold"
+}}>
+  View Prediction History
+</a>
 
-<h2>{result}</h2>
-
-</div>
-
-)
-
+      <h3 style={{ textAlign: "center", marginTop: "15px" }}>
+        {result}
+      </h3>
+    </div>
+  );
 }
 
-export default PCOSForm
+export default PCOSForm;
