@@ -1,10 +1,12 @@
 import { Link } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
 
 function Home(){
+  const { currentUser } = useAuth();
 
-return(
+  return(
 
-<div>
+    <div>
 
 {/* HERO SECTION */}
 
@@ -48,31 +50,48 @@ and generate smart health reports using machine learning.
 
 <div style={{display:"flex",gap:"15px"}}>
 
-<Link to="/pcos">
-<button style={{
-padding:"12px 25px",
-background:"#ff4d8d",
-color:"white",
-border:"none",
-borderRadius:"8px",
-cursor:"pointer"
-}}>
-Check PCOS Risk
-</button>
-</Link>
+{currentUser ? (
+  <>
+    <Link to="/dashboard">
+    <button style={{
+    padding:"12px 25px",
+    background:"#ff4d8d",
+    color:"white",
+    border:"none",
+    borderRadius:"8px",
+    cursor:"pointer"
+    }}>
+    Go to Dashboard
+    </button>
+    </Link>
 
-<Link to="/dashboard">
-<button style={{
-padding:"12px 25px",
-background:"white",
-border:"2px solid #ff4d8d",
-color:"#ff4d8d",
-borderRadius:"8px",
-cursor:"pointer"
-}}>
-Health Dashboard
-</button>
-</Link>
+    <Link to="/pcos">
+    <button style={{
+    padding:"12px 25px",
+    background:"white",
+    border:"2px solid #ff4d8d",
+    color:"#ff4d8d",
+    borderRadius:"8px",
+    cursor:"pointer"
+    }}>
+    Take PCOS Test
+    </button>
+    </Link>
+  </>
+) : (
+  <Link to="/login">
+  <button style={{
+  padding:"12px 25px",
+  background:"#ff4d8d",
+  color:"white",
+  border:"none",
+  borderRadius:"8px",
+  cursor:"pointer"
+  }}>
+  Get Started
+  </button>
+  </Link>
+)}
 
 </div>
 

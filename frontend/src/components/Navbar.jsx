@@ -1,33 +1,39 @@
 import { Link } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
 
-function Navbar(){
+function Navbar() {
+  const { currentUser, logout } = useAuth();
 
-return(
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
+  };
 
-<div style={{
-display:"flex",
-justifyContent:"space-between",
-padding:"15px 40px",
-background:"#ff4d8d",
-color:"white"
-}}>
+  return (
+    <nav className="nav-bar">
+      <div className="nav-brand">SHECARES 🌸</div>
 
-<h2>SHECARES 🌸</h2>
+      <div className="nav-links">
+        <Link to="/" className="nav-link">Home</Link>
+        {currentUser && <Link to="/pcos" className="nav-link">PCOS Check</Link>}
+        {currentUser && <Link to="/nutrition" className="nav-link">Nutrition</Link>}
+        {currentUser && <Link to="/reminder" className="nav-link">Reminders</Link>}
+        {currentUser && <Link to="/dashboard" className="nav-link">Dashboard</Link>}
+        {currentUser && <Link to="/report" className="nav-link">Report</Link>}
+      </div>
 
-<div style={{display:"flex",gap:"20px"}}>
-
-<Link to="/" style={{color:"white"}}>Home</Link>
-<Link to="/pcos" style={{color:"white"}}>PCOS Check</Link>
-<Link to="/nutrition" style={{color:"white"}}>Nutrition</Link>
-<Link to="/dashboard" style={{color:"white"}}>Dashboard</Link>
-<Link to="/report" style={{color:"white"}}>Report</Link>
-
-</div>
-
-</div>
-
-)
-
+      <div className="nav-actions">
+        {currentUser ? (
+          <button className="nav-action-btn" onClick={handleLogout}>Logout</button>
+        ) : (
+          <Link to="/login" className="nav-action-btn">Sign In</Link>
+        )}
+      </div>
+    </nav>
+  );
 }
 
 export default Navbar

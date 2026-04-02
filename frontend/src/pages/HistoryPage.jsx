@@ -1,13 +1,22 @@
 import { useEffect, useState } from "react";
 import { db } from "../firebase";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, query, where, getDocs } from "firebase/firestore";
+import { useAuth } from "../contexts/AuthContext";
 
 function HistoryPage() {
+  const { currentUser } = useAuth();
   const [data, setData] = useState([]);
 
   useEffect(() => {
     const fetchData = async () => {
-      const querySnapshot = await getDocs(collection(db, "predictions"));
+      if (!currentUser) return;
+
+      const q = query(
+        collection(db, "predictions"),
+        where("userId", "==", currentUser.uid)
+      );
+
+      const querySnapshot = await getDocs(q);
 
       const list = querySnapshot.docs.map(doc => ({
         id: doc.id,
@@ -18,7 +27,7 @@ function HistoryPage() {
     };
 
     fetchData();
-  }, []);
+  }, [currentUser]);
 
   return (
     <div style={{ padding: "20px" }}>
